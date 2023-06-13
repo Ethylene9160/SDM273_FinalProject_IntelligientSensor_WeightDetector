@@ -21,7 +21,9 @@ unsigned char tubeNums[] = {  //common positive
   B10000000, // 8
   B10010000 // 9
 };
-int cp_num = 0;
+int cp_num = 0;//calculator for current instance (self established), to check stability of the memory.
+
+//pins of the digital tube
 const int LOAD = 5;
 const int SCLK = 6;
 const int SDI = 7;
@@ -43,6 +45,7 @@ bool isYiChu = false;
 #include"DataInterface.h"
 #include"MyDigitalTube.h"
 
+//the error(static) of the measuring process.
 mydata difference;
 int calculator = 1;
 
@@ -117,19 +120,17 @@ void setup() {
 void loop() {
   //    Serial.print("the number of current instances is: ");
   //    Serial.println(cp_num);
-  //light(2333);
-  //myTube->light(2333);
-  //delay(1000);
-  //return to 0 point
 
+  //Zero button: store the static error to corrective data
   if (digitalRead(ZERO_KEY) == HIGH) {
     delay(5);
     if (digitalRead(ZERO_KEY) == HIGH) {
       Serial.println("I'm button!! why press me !!");
-      difference = /*(float)*/stablizer->filter->getAverage();
+      difference = stablizer->filter->getAverage();
     }
   }
 
+  //measuring mode: light
   if (digitalRead(SMALL_KEY) == HIGH) {
     delay(5);
     if (digitalRead(SMALL_KEY) == HIGH) {
@@ -138,6 +139,7 @@ void loop() {
     }
   }
 
+  //heavy
   if (digitalRead(LARGE_KEY) == HIGH) {
     delay(5);
     if (digitalRead(LARGE_KEY) == HIGH) {
@@ -148,8 +150,6 @@ void loop() {
 
   demical d = kinematicDetector->getAngle();
   stablizer->update(ToWeightData::analog2error(d));
-//  Serial.print("before filter:");
-//  Serial.println(ToWeightData::analog2error(d-difference));
   delay(2);
 }
 
@@ -174,7 +174,7 @@ Stablizer::Stablizer(int length, int absoluteError, int relativeError, MyDigital
 void Stablizer::show(mydata data)
 {
   if(--calculator) return;
-  
+  //Zero order holder
   calculator = 10;
   mydata out=0;
   
